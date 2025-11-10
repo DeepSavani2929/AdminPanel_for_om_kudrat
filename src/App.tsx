@@ -24,6 +24,7 @@ import Categories from "./pages/categories/Categories";
 import Orders from "./pages/orders/Orders";
 import { ToastContainer } from "react-toastify";
 import Products from "./pages/products/products";
+import ContactUs from "./pages/contactUs/ContactUs.tsx";
 import Blog from "./pages/blog/Blog";
 import BlogDetails from "./components/blogs/BlogDetails";
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -45,8 +46,9 @@ export default function App() {
             <Route path="/orders" element={<Orders />} />
             <Route path="/products" element={<Products />} />
             <Route path="/blogs" element={<Blog />} />
-            <Route path="/blogs/:blogId" element={<BlogDetails />} />
+            <Route path="/blogs/:blogSlug" element={<BlogDetails />} />
             <Route path="/blogs/addBlog" element={<BlogDetails />} />
+            <Route path="/contactUs" element={<ContactUs />} />
 {/* 
             <Route path="/form-elements" element={<FormElements />} />
 

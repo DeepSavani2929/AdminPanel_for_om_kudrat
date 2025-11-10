@@ -443,6 +443,12 @@ const navItems: NavItem[] = [
     path: "/blogs",
   },
 
+    {
+    icon: <NotebookPen  width = "0.5em"  height = "0.5em"  />,
+    name: "Contact Us",
+    path: "/contactUs",
+  },
+
 ];
 
 const AppSidebar: React.FC = () => {

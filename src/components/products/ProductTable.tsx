@@ -84,6 +84,7 @@ const ProductTable = (): JSX.Element => {
 
       if (res.data.success) {
         setProducts(res.data.data);
+        console.log(res.data.data)
         setTotalPages(res.data.totalPages);
         setTotalProducts(res.data.totalProducts)
       } else {
@@ -186,6 +187,10 @@ const ProductTable = (): JSX.Element => {
       newErrors.price = "Price enter a price";
     } else if (Number(product.price) < 0) {
       newErrors.price = "Price must be greater than 0";
+    }
+
+    if (!product.productSlug) {
+      newErrors.productSlug = "Please enter slug for the product!";
     }
 
     if (!product.discountedPrice && !(Number(product.discountedPrice) < 0)) {
@@ -403,7 +408,7 @@ const ProductTable = (): JSX.Element => {
 
           <div>
             <label className="block text-sm text-black font-semibold mb-2 dark:text-gray-400">
-              Name
+              Product Name
             </label>
             <input
               type="text"
@@ -415,6 +420,23 @@ const ProductTable = (): JSX.Element => {
             />
             {errors.productName && (
               <p className="text-red-500 text-sm mt-1">{errors.productName}</p>
+            )}
+          </div>
+
+            <div>
+            <label className="block text-sm text-black font-semibold mb-2 dark:text-gray-400">
+              Product Slug
+            </label>
+            <input
+              type="text"
+              name="productSlug"
+              value={product.productSlug || ""}
+              onChange={handleOnChange}
+              placeholder="Enter product name"
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 dark:text-gray-400 focus:ring-2 focus:ring-brand-500 outline-none"
+            />
+            {errors.productName && (
+              <p className="text-red-500 text-sm mt-1">{errors.productSlug}</p>
             )}
           </div>
 

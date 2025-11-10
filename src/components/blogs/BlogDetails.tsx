@@ -1,6 +1,3 @@
-
-
-
 import { useEffect, useState } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import ReactQuill from "react-quill";
@@ -11,7 +8,7 @@ import PageBreadcrumb from "../common/PageBreadCrumb";
 import { CircleChevronLeft } from "lucide-react";
 
 const BlogDetails = () => {
-  const { blogId } = useParams();
+  const { blogSlug } = useParams();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [blog, setBlog] = useState({
     blogTitle: "",
@@ -52,7 +49,11 @@ const BlogDetails = () => {
       error.shortDescription = "Short description is required.";
     }
 
-    if (!blogId && !blog.blogImage) {
+    if (!blog.blogSlug) {
+      error.blogSlug = "Slug for the blog is required.";
+    }
+
+    if (!blogSlug && !blog.blogImage) {
       error.blogImage = "Blog image is required.";
     }
 
@@ -69,12 +70,12 @@ const BlogDetails = () => {
   };
 
   useEffect(() => {
-    if (blogId) getBlog();
-  }, [blogId]);
+    if (blogSlug) getBlog();
+  }, [blogSlug]);
 
   const getBlog = async () => {
     try {
-      const res = await axiosInstance.get(`/blog/getBlog/${blogId}`);
+      const res = await axiosInstance.get(`/blog/getBlog/${blogSlug}`);
 
       if (res.data.success) {
         const blogData = res.data.data;
@@ -82,6 +83,7 @@ const BlogDetails = () => {
           blogTitle: blogData.blogTitle || "",
           shortDescription: blogData.shortDescription || "",
           content: blogData.content || "",
+          blogSlug: blogData.blogSlug || "", 
            blogImage: null,
         });
 
@@ -132,6 +134,7 @@ setPreview(
       formData.append("blogTitle", blog.blogTitle);
       formData.append("shortDescription", blog.shortDescription);
       formData.append("content", blog.content);
+      formData.append("blogSlug", blog.blogSlug);
 
 
       if (blog.blogImage) {
@@ -141,8 +144,8 @@ setPreview(
       }
 
       let res;
-      if (blogId) {
-        res = await axiosInstance.put(`/blog/updateBlog/${blogId}`, formData);
+      if (blogSlug) {
+        res = await axiosInstance.put(`/blog/updateBlog/${blogSlug}`, formData);
       } else {
         res = await axiosInstance.post("/blog/createBlog", formData);
       }
@@ -173,7 +176,7 @@ setPreview(
         <div className="rounded-2xl border  mx-auto border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
       <div className="px-6 py-5 flex justify-between items-center">
         <h3 className="text-2xl font-bold text-gray-800 dark:text-white/90">
-          {blogId ? "Edit Blog" : "Add New Blog"}
+          {blogSlug ? "Edit Blog" : "Add New Blog"}
         </h3>
          <CircleChevronLeft className="w-12 h-12 text-brand-500 cursor-pointer " onClick = {() =>  navigate("/blogs")} />
       </div>
@@ -196,6 +199,23 @@ setPreview(
             />
             {errors.blogTitle && (
               <p className="text-red-500 text-sm">{errors.blogTitle}</p>
+            )}
+          </div>
+
+            <div className="flex flex-col gap-y-1">
+            <label className="font-medium dark:text-gray-400 ">Slug</label>
+            <input
+              type="text"
+              name="blogSlug"
+              value={blog.blogSlug}
+              onChange={handleOnChange}
+              className={`border-2 rounded-lg py-2 px-3 dark:text-gray-400  ${
+                errors.blogTitle ? "border-red-500" : "border-gray-300"
+              }`}
+              placeholder="Enter blog title"
+            />
+            {errors.blogTitle && (
+              <p className="text-red-500 text-sm">{errors.blogSlug}</p>
             )}
           </div>
 
@@ -270,7 +290,7 @@ setPreview(
               disabled={loading}
               className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-lg transition-all"
             >
-              {loading ? "Publishing..." : blogId ? "Update" : "Publish"}
+              {loading ? "Publishing..." : blogSlug ? "Update" : "Publish"}
             </button>
           </div>
         </div>

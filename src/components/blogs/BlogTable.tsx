@@ -353,7 +353,7 @@ const BlogTable = (): JSX.Element => {
 
   const handleOnAddBlog = () => navigate("/blogs/addBlog");
 
-  const handleEditBlog = (blog: Blog) => navigate(`/blogs/${blog._id}`);
+  const handleEditBlog = (blog: Blog) => navigate(`/blogs/${blog.blogSlug}`);
 
   const openDeleteModal = (id: string | undefined) => {
     if (!id) return;
