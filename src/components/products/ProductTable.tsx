@@ -19,6 +19,7 @@ import TableSkeleton from "../ui/tableSkeleton/TableSkeleton.tsx";
 interface Product {
   _id?: string;
   productName: string;
+  productSlug?: string;
   image?: string;
   price: number;
   discountedPrice: number;
@@ -27,12 +28,15 @@ interface Product {
   languageId: string;
   languageName?: string;
   isBestSeller?: boolean;
+  isDealOfTheWeek?: boolean;
 }
 
 interface ApiResponse {
   success: boolean;
   message: string;
   data: Product[];
+  totalPages?: number;
+  totalProducts?: number;
 }
 
 interface Category {
@@ -54,95 +58,90 @@ const ProductTable = (): JSX.Element => {
   const [isOpen, setIsOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(
-    null
-  );
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalProducts, setTotalProducts] = useState("");
-  const [sortField, setSortField] = useState("createdAt");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-   const [limit, setLimit] = useState(10)
-    const [isLoading, setIsLoading] = useState(false); 
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalProducts, setTotalProducts] = useState<string>("");
+  const [limit, setLimit] = useState<number>(10);
+  const [isLoading, setIsLoading] = useState<boolean>(false); 
 
   useEffect(() => {
     getAllProducts();
     getCategories();
     getLanguages();
-  }, [currentPage, sortField, sortOrder, limit]);
+  }, [currentPage, limit]);
 
   const getAllProducts = async (): Promise<void> => {
-     setIsLoading(true);
+    setIsLoading(true);
     try {
       const res = await axiosInstance.get<ApiResponse>(
-        `/products/getAllProductsForDashboard?page=${currentPage}&limit=${limit}&sort=${sortField}:${sortOrder}`
+        `/products/getAllProductsForDashboard?page=${currentPage}&limit=${limit}`
       );
 
       if (res.data.success) {
         setProducts(res.data.data);
-        console.log(res.data.data)
-        setTotalPages(res.data.totalPages);
-        setTotalProducts(res.data.totalProducts)
+        setTotalPages(res.data.totalPages || 1);
+        setTotalProducts(String(res.data.totalProducts || ""));
       } else {
         toast.error(res.data.message);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
       const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Something went wrong";
+        err.response?.data?.message || err.message || "Something went wrong";
       toast.error(errorMessage);
-    }
-       finally {
+    } finally {
       setIsLoading(false);
     }
-
   };
 
   const getCategories = async (): Promise<void> => {
     try {
-      const res = await axiosInstance.get("/categories/getAllCategories");
+      const res = await axiosInstance.get<{ success: boolean; message: string; data: Category[] }>(
+        "/categories/getAllCategories"
+      );
       if (res.data.success) {
         setCategories(res.data.data);
       } else {
         toast.error(res.data.message);
       }
-    } catch (error: any) {
-      toast.error(
-        error.response?.data?.message || error.message || "Something went wrong"
-      );
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      toast.error(err.response?.data?.message || err.message || "Something went wrong");
     }
   };
 
   const getLanguages = async (): Promise<void> => {
     try {
-      const res = await axiosInstance.get("/languages/getAllLanguages");
+      const res = await axiosInstance.get<{ success: boolean; message: string; data: Language[] }>(
+        "/languages/getAllLanguages"
+      );
       if (res.data.success) {
         setLanguages(res.data.data);
       } else {
         toast.error(res.data.message);
       }
-    } catch (error: any) {
-      toast.error(
-        error.response?.data?.message || error.message || "Something went wrong"
-      );
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      toast.error(err.response?.data?.message || err.message || "Something went wrong");
     }
   };
 
   const handleOnChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    const { name, type, value, checked, files } = e.target as any;
+    const target = e.target as HTMLInputElement;
+    const { name, type, value, checked, files } = target;
 
     if (type === "checkbox") {
       setProduct((prev) => ({ ...prev, [name]: checked }));
     } else if (type === "file" && files && files[0]) {
       const file = files[0];
-      setProduct((prev) => ({ ...prev, image: file }));
+      setProduct((prev) => ({ ...prev, image: file as unknown as string }));
       setImagePreview(URL.createObjectURL(file));
     } else {
       setProduct((prev) => ({ ...prev, [name]: value }));
@@ -155,8 +154,8 @@ const ProductTable = (): JSX.Element => {
     setEditProduct(null);
     setProduct({});
     setImagePreview(null);
-    setCategoryDropdownOpen(false)
-    setLanguageDropdownOpen(false)
+    setCategoryDropdownOpen(false);
+    setLanguageDropdownOpen(false);
     setIsOpen(true);
   };
 
@@ -184,9 +183,9 @@ const ProductTable = (): JSX.Element => {
     }
 
     if (!product.price) {
-      newErrors.price = "Price enter a price";
+      newErrors.price = "Please enter a price.";
     } else if (Number(product.price) < 0) {
-      newErrors.price = "Price must be greater than 0";
+      newErrors.price = "Price must be greater than 0.";
     }
 
     if (!product.productSlug) {
@@ -252,14 +251,13 @@ const ProductTable = (): JSX.Element => {
       } else {
         toast.error(res.data.message);
       }
-    } catch (error: any) {
-      toast.error(
-        error.response?.data?.message || error.message || "Something went wrong"
-      );
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      toast.error(err.response?.data?.message || err.message || "Something went wrong");
     }
   };
 
-  const openDeleteModal = (id: string | undefined) => {
+  const openDeleteModal = (id?: string) => {
     if (!id) return;
     setSelectedProductId(id);
     setIsDeleteModalOpen(true);
@@ -282,10 +280,9 @@ const ProductTable = (): JSX.Element => {
       } else {
         toast.error(res.data.message);
       }
-    } catch (error: any) {
-      toast.error(
-        error.response?.data?.message || error.message || "Something went wrong"
-      );
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      toast.error(err.response?.data?.message || err.message || "Something went wrong");
     } finally {
       closeDeleteModal();
     }
@@ -401,7 +398,7 @@ const ProductTable = (): JSX.Element => {
         onClose={handleCloseModal}
         className="max-w-xl w-full mx-4"
       >
-        <div className="p-6 sm:p-8 lg:p-12 space-y-5">
+        <div className="p-6 sm:p-8 lg:p-12 space-y-5 max-h-[80vh] overflow-y-auto">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4 dark:text-gray-400">
             {editProduct ? "Edit Product" : "Add Product"}
           </h2>
