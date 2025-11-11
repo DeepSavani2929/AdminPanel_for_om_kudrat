@@ -30,15 +30,13 @@ export default function ContactUsTable(): JSX.Element {
   const [customers, setCustomers] = useState<Cutomer[]>([])
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [sortField, setSortField] = useState("createdAt");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [totalCustomers, setTotalCustomers] = useState("")
   const [limit, setLimit] = useState(10)
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     getUsers();
-  }, [currentPage, sortField, sortOrder, limit]);
+  }, [currentPage,limit]);
 
   const getUsers = async (): Promise<void> => {
     setIsLoading(true);

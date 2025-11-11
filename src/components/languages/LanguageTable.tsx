@@ -39,8 +39,6 @@ const LanguageTable = (): JSX.Element => {
   );
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [sortField, setSortField] = useState("createdAt");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
     const [totalLanguages, setTotalLanguages] = useState("");
     const [limit, setLimit] = useState(10)
     const [isLoading, setIsLoading] = useState(false);
@@ -48,13 +46,13 @@ const LanguageTable = (): JSX.Element => {
 
   useEffect(() => {
     getLanguages();
-  }, [currentPage, sortField, sortOrder, limit]);
+  }, [currentPage, limit]);
 
   const getLanguages = async (): Promise<void> => {
         setIsLoading(true);
     try {
       const res = await axiosInstance.get<ApiResponse>(
-        `/languages/getAllLanguages?page=${currentPage}&limit=${limit}&sort=${sortField}:${sortOrder}`
+        `/languages/getAllLanguages?page=${currentPage}&limit=${limit}`
       );
 
       if (res.data.success) {

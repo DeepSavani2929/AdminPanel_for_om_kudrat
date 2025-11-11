@@ -1,3 +1,4 @@
+import React, { useEffect, useState, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -5,16 +6,14 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-
-import { useEffect, useState, useRef } from "react";
 import { toast } from "react-toastify";
 import axiosInstance from "../../api/axiosInstance";
 import { Modal } from "../ui/modal";
 import { Pencil, Plus, Trash2, ChevronDown } from "lucide-react";
-import { Dropdown } from "../ui/dropdown/Dropdown.tsx";
-import { DropdownItem } from "../ui/dropdown/DropdownItem.tsx";
-import Pagination from "../ui/pagination/Pagination.tsx";
-import TableSkeleton from "../ui/tableSkeleton/TableSkeleton.tsx"; 
+import { Dropdown } from "../ui/dropdown/Dropdown";
+import { DropdownItem } from "../ui/dropdown/DropdownItem";
+import Pagination from "../ui/pagination/Pagination";
+import TableSkeleton from "../ui/tableSkeleton/TableSkeleton";
 
 interface Product {
   _id?: string;
@@ -49,7 +48,8 @@ interface Language {
   name: string;
 }
 
-const ProductTable = (): JSX.Element => {
+
+const ProductTable: React.FC = (): JSX.Element => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -67,7 +67,7 @@ const ProductTable = (): JSX.Element => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalProducts, setTotalProducts] = useState<string>("");
   const [limit, setLimit] = useState<number>(10);
-  const [isLoading, setIsLoading] = useState<boolean>(false); 
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     getAllProducts();
@@ -131,9 +131,7 @@ const ProductTable = (): JSX.Element => {
     }
   };
 
-  const handleOnChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleOnChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const target = e.target as HTMLInputElement;
     const { name, type, value, checked, files } = target;
 
@@ -228,9 +226,7 @@ const ProductTable = (): JSX.Element => {
         res = await axiosInstance.put(
           `/products/updateProduct/${editProduct._id}`,
           formData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-          }
+          { headers: { "Content-Type": "multipart/form-data" } }
         );
       } else {
         res = await axiosInstance.post("/products/createProduct", formData, {
@@ -290,7 +286,7 @@ const ProductTable = (): JSX.Element => {
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-      <div className="px-6 py-3 flex items-center justify-end"> 
+      <div className="px-6 py-3 flex items-center justify-end">
         <button
           className="inline-flex items-center justify-center gap-2 rounded-lg transition px-5 py-3.5 text-sm bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600"
           onClick={handleOnAddProduct}
@@ -307,93 +303,111 @@ const ProductTable = (): JSX.Element => {
               {isLoading ? (
                 <TableSkeleton
                   rows={limit}
-                  columns={["Image", "Name", "Category", "Language", "Price", "Discounted Price", "Action" ]}
+                  columns={[
+                    "Image",
+                    "Name",
+                    "Category",
+                    "Language",
+                    "Price",
+                    "Discounted Price",
+                    "Action",
+                  ]}
                 />
               ) : (
-              <Table>
-                <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
-                  <TableRow className="  text-gray-500 text-center text-lg dark:text-gray-400">
-                    <TableCell className="px-5 py-3 font-semibold">
-                      Image
-                    </TableCell>
-                    <TableCell className="font-semibold">Name</TableCell>
-                    <TableCell className="font-semibold">Category</TableCell>
-                    <TableCell className="font-semibold">Language</TableCell>
-                    <TableCell className="font-semibold">Price</TableCell>
-                    <TableCell className="font-semibold">
-                      Discounted Price
-                    </TableCell>
-                    <TableCell className="font-semibold">Action</TableCell>
-                  </TableRow>
-                </TableHeader>
+                <Table>
+                  <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                    <TableRow className="text-gray-500 text-center text-lg dark:text-gray-400">
+                      <TableCell className="px-5 py-3 font-semibold">
+                        Image
+                      </TableCell>
+                      <TableCell className="font-semibold">Name</TableCell>
+                      <TableCell className="font-semibold">Category</TableCell>
+                      <TableCell className="font-semibold">Language</TableCell>
+                      <TableCell className="font-semibold">Price</TableCell>
+                      <TableCell className="font-semibold">
+                        Discounted Price
+                      </TableCell>
+                      <TableCell className="font-semibold">Action</TableCell>
+                    </TableRow>
+                  </TableHeader>
 
-                <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                  {products.length > 0 ? (
-                    products.map((product) => (
-                      <TableRow key={product._id} className="text-center">
-                        <TableCell className="flex justify-center">
-                          {product.image && (
-                            <img
-                              src={`http://localhost:8000/images/${product.image}`}
-                              className="w-18 h-18 my-2 rounded-md"
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell className="dark:text-gray-400">{product.productName}</TableCell>
-                        <TableCell className="dark:text-gray-400">{product.categoryName}</TableCell>
-                        <TableCell className="dark:text-gray-400">{product.languageName}</TableCell>
-                        <TableCell className="dark:text-gray-400">${product.price}</TableCell>
-                        <TableCell className="dark:text-gray-400">$ {product.discountedPrice}</TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex justify-center">
-                            <div className="flex gap-3">
-                              <button
-                                onClick={() => handleOnEditProduct(product)}
-                                className="inline-flex items-center justify-center gap-2 rounded-lg transition bg-amber-500 p-2 text-xs text-white shadow-theme-xs hover:bg-amber-600"
-                              >
-                                <Pencil className="!text-xs" />
-                              </button>
-                              <button
-                                onClick={() => openDeleteModal(product._id)}
-                                className="inline-flex items-center justify-center gap-2 rounded-lg transition bg-red-500 p-2 text-xs text-white shadow-theme-xs hover:bg-red-600"
-                              >
-                                <Trash2 />
-                              </button>
+                  <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                    {products.length > 0 ? (
+                      products.map((product) => (
+                        <TableRow key={product._id} className="text-center">
+                          <TableCell className="flex justify-center">
+                            {product.image && (
+                              <img
+                                src={`http://localhost:8000/images/${product.image}`}
+                                className="w-18 h-18 my-2 rounded-md"
+                              />
+                            )}
+                          </TableCell>
+                          <TableCell className="dark:text-gray-400">
+                            {product.productName}
+                          </TableCell>
+                          <TableCell className="dark:text-gray-400">
+                            {product.categoryName}
+                          </TableCell>
+                          <TableCell className="dark:text-gray-400">
+                            {product.languageName}
+                          </TableCell>
+                          <TableCell className="dark:text-gray-400">
+                            ${product.price}
+                          </TableCell>
+                          <TableCell className="dark:text-gray-400">
+                            $ {product.discountedPrice}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex justify-center">
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={() => handleOnEditProduct(product)}
+                                  className="inline-flex items-center justify-center gap-2 rounded-lg transition bg-amber-500 p-2 text-xs text-white shadow-theme-xs hover:bg-amber-600"
+                                >
+                                  <Pencil className="!text-xs" />
+                                </button>
+                                <button
+                                  onClick={() => openDeleteModal(product._id)}
+                                  className="inline-flex items-center justify-center gap-2 rounded-lg transition bg-red-500 p-2 text-xs text-white shadow-theme-xs hover:bg-red-600"
+                                >
+                                  <Trash2 />
+                                </button>
+                              </div>
                             </div>
-                          </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan={7}
+                          className="text-center text-gray-500 py-4"
+                        >
+                          No Products found.
                         </TableCell>
                       </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={7}
-                        className="text-center text-gray-500 py-4"
-                      >
-                        No Products found.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                    )}
+                  </TableBody>
+                </Table>
               )}
             </div>
           </div>
         </div>
 
-                 {!isLoading && (
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={(page) => setCurrentPage(page)}
-              limit={limit}
-              setLimit={setLimit}
-              totalCount={totalProducts}
-            />
-                 )}
+        {!isLoading && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => setCurrentPage(page)}
+            limit={limit}
+            setLimit={setLimit}
+            totalCount={totalProducts} 
+          />
+        )}
       </div>
 
-      <Modal
+  <Modal
         isOpen={isOpen}
         onClose={handleCloseModal}
         className="max-w-xl w-full mx-4"

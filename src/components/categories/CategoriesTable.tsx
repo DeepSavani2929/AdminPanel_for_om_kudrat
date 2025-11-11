@@ -13,7 +13,7 @@ import dayjs from "dayjs";
 import { Modal } from "../ui/modal";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import Pagination from "../ui/pagination/Pagination";
-import TableSkeleton from "../ui/tableSkeleton/TableSkeleton.tsx"; 
+import TableSkeleton from "../ui/tableSkeleton/TableSkeleton.tsx";
 
 interface Category {
   _id?: string;
@@ -25,6 +25,8 @@ interface ApiResponse {
   success: boolean;
   message: string;
   data: Category[];
+  totalPages?: number;
+  totalCategories?: number;
 }
 
 const CategoriesTable = (): JSX.Element => {
@@ -37,60 +39,55 @@ const CategoriesTable = (): JSX.Element => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null
   );
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-    const [totalCategories, setTotalCategories] = useState(1);
-  const [sortField, setSortField] = useState("createdAt");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-   const [limit, setLimit] = useState(10)
-      const [isLoading, setIsLoading] = useState(false); 
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalCategories, setTotalCategories] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(10);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     getCategories();
-  }, [currentPage, sortField, sortOrder,limit]);
-
+  }, [currentPage,limit]);
 
   const getCategories = async (): Promise<void> => {
     setIsLoading(true);
     try {
       const res = await axiosInstance.get<ApiResponse>(
-        `/categories/getAllCategories?page=${currentPage}&limit=${limit}&sort=${sortField}:${sortOrder}`
+        `/categories/getAllCategories?page=${currentPage}&limit=${limit}`
       );
 
       if (res.data.success) {
         setCategories(res.data.data);
-        setTotalPages(res.data.totalPages);
-        setTotalCategories(res.data.totalCategories)
+        setTotalPages(res.data.totalPages || 1);
+        setTotalCategories(res.data.totalCategories || 0);
       } else {
         toast.error(res.data.message);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
       const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Something went wrong";
+        err.response?.data?.message || err.message || "Something went wrong";
       toast.error(errorMessage);
-    }
-     finally {
+    } finally {
       setIsLoading(false);
     }
   };
 
-  const handleOnAddCategory = () => {
+  const handleOnAddCategory = (): void => {
     setEditCategory(null);
     setCategoryName("");
     setError({});
     setIsOpen(true);
   };
 
-  const handleOnEditCategory = (category: Category) => {
+  const handleOnEditCategory = (category: Category): void => {
     setEditCategory(category);
     setCategoryName(category.name);
     setError({});
     setIsOpen(true);
   };
 
-  const handleCloseModal = () => {
+  const handleCloseModal = (): void => {
     setIsOpen(false);
     setCategoryName("");
     setEditCategory(null);
@@ -119,7 +116,7 @@ const CategoriesTable = (): JSX.Element => {
 
     try {
       if (editCategory) {
-        const res = await axiosInstance.put(
+        const res = await axiosInstance.put<{ success: boolean; message: string }>(
           `/categories/updateCategory/${editCategory._id}`,
           { name: categoryName }
         );
@@ -132,9 +129,10 @@ const CategoriesTable = (): JSX.Element => {
           toast.error(res.data.message);
         }
       } else {
-        const res = await axiosInstance.post("/categories/createCategory", {
-          name: categoryName,
-        });
+        const res = await axiosInstance.post<{ success: boolean; message: string }>(
+          "/categories/createCategory",
+          { name: categoryName }
+        );
 
         if (res.data.success) {
           toast.success(res.data.message || "Category added successfully.");
@@ -144,22 +142,21 @@ const CategoriesTable = (): JSX.Element => {
           toast.error(res.data.message);
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
       const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Something went wrong";
+        err.response?.data?.message || err.message || "Something went wrong";
       toast.error(errorMessage);
     }
   };
 
-  const openDeleteModal = (id: string | undefined) => {
+  const openDeleteModal = (id: string | undefined): void => {
     if (!id) return;
     setSelectedCategoryId(id);
     setIsDeleteModalOpen(true);
   };
 
-  const closeDeleteModal = () => {
+  const closeDeleteModal = (): void => {
     setSelectedCategoryId(null);
     setIsDeleteModalOpen(false);
   };
@@ -168,7 +165,7 @@ const CategoriesTable = (): JSX.Element => {
     if (!selectedCategoryId) return;
 
     try {
-      const res = await axiosInstance.delete(
+      const res = await axiosInstance.delete<{ success: boolean; message: string }>(
         `/categories/deleteCategory/${selectedCategoryId}`
       );
 
@@ -178,11 +175,10 @@ const CategoriesTable = (): JSX.Element => {
       } else {
         toast.error(res.data.message);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
       const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Something went wrong";
+        err.response?.data?.message || err.message || "Something went wrong";
       toast.error(errorMessage);
     } finally {
       closeDeleteModal();

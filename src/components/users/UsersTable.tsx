@@ -31,15 +31,13 @@ export default function UsersTable(): JSX.Element {
   const [users, setUsers] = useState<User[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [sortField, setSortField] = useState("createdAt");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [totalUsers, setTotalUsers] = useState("")
     const [limit, setLimit] = useState(10)
       const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     getUsers();
-  }, [currentPage, sortField, sortOrder, limit]);
+  }, [currentPage, limit]);
 
   const getUsers = async (): Promise<void> => {
     setIsLoading(true);
